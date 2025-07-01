@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃什么？美食随机推荐</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #fff4e6 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #ff7b25;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .result-container {
+            background-color: #fff9f5;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px dashed #ffd8b9;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .result-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 123, 37, 0.2);
+        }
+        
+        .category {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff7b25;
+            margin-bottom: 5px;
+        }
+        
+        .food {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 16px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #ff7b25, #ffaa5a);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 123, 37, 0.3);
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(255, 123, 37, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .bubble {
+            position: absolute;
+            background-color: rgba(255, 123, 37, 0.1);
+            border-radius: 50%;
+        }
+        
+        .bubble-1 {
+            width: 100px;
+            height: 100px;
+            top: -30px;
+            left: -30px;
+        }
+        
+        .bubble-2 {
+            width: 150px;
+            height: 150px;
+            bottom: -50px;
+            right: -50px;
+        }
+        
+        .footer {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #999;
+        }
+        
+        /* 闪动效果 */
+        .flashing {
+            animation: flash 0.2s infinite;
+        }
+        
+        @keyframes flash {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        /* 所有美食列表 */
+        .all-foods {
+            width: 90%;
+            max-width: 1000px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        .all-foods h2 {
+            color: #ff7b25;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .foods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        
+        .food-item {
+            background-color: #fff9f5;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ffd8b9;
+        }
+        
+        .food-category {
+            font-weight: bold;
+            color: #ff7b25;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .food-list {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .food-list div {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #ffd8b9;
+        }
+        
+        .food-list div:last-child {
+            border-bottom: none;
+        }
+        
+        /* 新增的筛选按钮 */
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            background: #ffd8b9;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #ffaa5a;
+            color: white;
+        }
+        
+        .filter-btn.active {
+            background: #ff7b25;
+            color: white;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                width: 85%;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .food {
+                font-size: 24px;
+            }
+            
+            .description {
+                font-size: 14px;
+            }
+            
+            .foods-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-buttons {
+                gap: 8px;
+            }
+            
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        
+        <h1>今天吃什么？</h1>
+        
+        <div class="result-container">
+            <div class="category" id="category">点击下方按钮开始</div>
+            <div class="food" id="food">随机推荐美食</div>
+            <div class="description" id="description">解决你的选择困难症</div>
+        </div>
+        
+        <button class="btn" id="generateBtn">随机推荐</button>
+        
+        <div class="footer">
+            点击按钮随机获取美食推荐，每天都有新发现！
+        </div>
+    </div>
+
+    <div class="all-foods">
+        <h2>所有可能随机的美食 (共15类200+种)</h2>
+        
+        <div class="filter-buttons" id="filterButtons">
+            <!-- 筛选按钮将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="foods-grid" id="foodsGrid">
+            <!-- 美食列表将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 美食分类及推荐数据 - 增强版
+        const foodData = [
+            { 
+                category: "中式正餐", 
+                foods: [
+                    {name: "红烧肉", desc: "肥而不腻，入口即化"},
+                    {name: "宫保鸡丁", desc: "麻辣鲜香，经典川菜"},
+                    {name: "鱼香肉丝", desc: "酸甜微辣，下饭神器"},
+                    {name: "水煮鱼", desc: "麻辣鲜嫩，川味代表"},
+                    {name: "回锅肉", desc: "川菜之首，色香味俱全"},
+                    {name: "麻婆豆腐", desc: "麻辣鲜香，豆腐嫩滑"},
+                    {name: "糖醋排骨", desc: "酸甜可口，老少皆宜"},
+                    {name: "清蒸鲈鱼", desc: "鲜美嫩滑，营养丰富"},
+                    {name: "东坡肉", desc: "酥而不烂，油而不腻"},
+                    {name: "北京烤鸭", desc: "皮脆肉嫩，传统名菜"},
+                    {name: "梅菜扣肉", desc: "肥而不腻，咸香下饭"},
+                    {name: "辣子鸡", desc: "麻辣酥香，重庆特色"},
+                    {name: "毛血旺", desc: "麻辣鲜香，内容丰富"},
+                    {name: "粉蒸肉", desc: "软糯咸香，米粉入味"},
+                    {name: "蒜泥白肉", desc: "蒜香浓郁，肥而不腻"}
+                ]
+            },
+            { 
+                category: "面食", 
+                foods: [
+                    {name: "牛肉面", desc: "汤头浓郁，面条劲道"},
+                    {name: "炸酱面", desc: "老北京风味，酱香浓郁"},
+                    {name: "热干面", desc: "武汉特色，芝麻酱香"},
+                    {name: "刀削面", desc: "山西特色，面条筋道"},
+                    {name: "重庆小面", desc: "麻辣鲜香，重庆风味"},
+                    {name: "兰州拉面", desc: "一清二白三红四绿"},
+                    {name: "油泼面", desc: "陕西特色，香辣过瘾"},
+                    {name: "担担面", desc: "四川风味，麻辣鲜香"},
+                    {name: "阳春面", desc: "江南风味，清淡鲜美"},
+                    {name: "臊子面", desc: "陕西特色，酸辣可口"},
+                    {name: "河南烩面", desc: "汤鲜面筋，羊肉香浓"},
+                    {name: "武汉热干面", desc: "芝麻酱香，面条劲道"},
+                    {name: "宜宾燃面", desc: "干香麻辣，四川特色"},
+                    {name: "上海葱油拌面", desc: "葱香浓郁，简单美味"},
+                    {name: "朝鲜冷面", desc: "酸甜冰凉，夏日首选"}
+                ]
+            },
+            { 
+                category: "快餐小吃", 
+                foods: [
+                    {name: "汉堡套餐", desc: "经典快餐，方便快捷"},
+                    {name: "炸鸡", desc: "外酥里嫩，香气扑鼻"},
+                    {name: "披萨", desc: "多种口味，拉丝芝士"},
+                    {name: "煎饼果子", desc: "天津特色，早餐首选"},
+                    {name: "肉夹馍", desc: "陕西风味，馍香肉烂"},
+                    {name: "鸡蛋灌饼", desc: "外酥里嫩，营养早餐"},
+                    {name: "麻辣烫", desc: "自选食材，麻辣鲜香"},
+                    {name: "烤冷面", desc: "东北特色，酸甜可口"},
+                    {name: "手抓饼", desc: "酥脆多层，搭配多样"},
+                    {name: "关东煮", desc: "日式风味，温暖舒适"},
+                    {name: "臭豆腐", desc: "闻着臭吃着香，外酥里嫩"},
+                    {name: "铁板鱿鱼", desc: "街头小吃，酱香浓郁"},
+                    {name: "章鱼小丸子", desc: "日式小吃，外酥里嫩"},
+                    {name: "鸡蛋仔", desc: "港式甜品，外脆内软"},
+                    {name: "烤红薯", desc: "冬日暖手，香甜软糯"}
+                ]
+            },
+            { 
+                category: "火锅/串串", 
+                foods: [
+                    {name: "四川火锅", desc: "麻辣鲜香，涮菜首选"},
+                    {name: "重庆老火锅", desc: "牛油锅底，麻辣过瘾"},
+                    {name: "潮汕牛肉火锅", desc: "清汤鲜肉，原汁原味"},
+                    {name: "串串香", desc: "一串一口，麻辣鲜香"},
+                    {name: "羊蝎子火锅", desc: "滋补美味，冬季首选"},
+                    {name: "菌汤火锅", desc: "养生鲜美，菌香浓郁"},
+                    {name: "椰子鸡火锅", desc: "海南风味，清甜鲜美"},
+                    {name: "九宫格火锅", desc: "重庆特色，分区涮煮"},
+                    {name: "单人小火锅", desc: "一人一锅，卫生方便"},
+                    {name: "韩式部队锅", desc: "韩式风味，甜辣可口"},
+                    {name: "酸菜白肉锅", desc: "东北风味，酸香开胃"},
+                    {name: "猪肚鸡火锅", desc: "广东风味，滋补养胃"},
+                    {name: "鱼头火锅", desc: "汤鲜味美，鱼肉嫩滑"},
+                    {name: "毛肚火锅", desc: "重庆特色，脆嫩爽口"},
+                    {name: "粥底火锅", desc: "广东特色，清淡鲜美"}
+                ]
+            },
+            { 
+                category: "日韩料理", 
+                foods: [
+                    {name: "寿司", desc: "日式精致，多种选择"},
+                    {name: "刺身拼盘", desc: "新鲜海鲜，原汁原味"},
+                    {name: "拉面", desc: "日式汤面，浓郁鲜美"},
+                    {name: "烤肉", desc: "韩式风味，自己动手"},
+                    {name: "石锅拌饭", desc: "韩式经典，营养丰富"},
+                    {name: "天妇罗", desc: "日式炸物，酥脆不腻"},
+                    {name: "章鱼小丸子", desc: "日式小吃，外酥里嫩"},
+                    {name: "泡菜炒饭", desc: "韩式风味，酸辣开胃"},
+                    {name: "鳗鱼饭", desc: "日式经典，甜咸适口"},
+                    {name: "部队锅", desc: "韩式火锅，丰富配料"},
+                    {name: "炸猪排", desc: "日式料理，外酥里嫩"},
+                    {name: "大阪烧", desc: "日式煎饼，内容丰富"},
+                    {name: "韩式炸鸡", desc: "甜辣酥脆，配啤酒绝佳"},
+                    {name: "冷面", desc: "韩式风味，酸甜冰凉"},
+                    {name: "寿喜锅", desc: "日式火锅，甜咸适口"}
+                ]
+            },
+            { 
+                category: "西餐", 
+                foods: [
+                    {name: "牛排", desc: "肉质鲜嫩，多种熟度"},
+                    {name: "意大利面", desc: "多种酱料，经典西餐"},
+                    {name: "奶油蘑菇汤", desc: "浓郁香滑，西式汤品"},
+                    {name: "沙拉", desc: "健康轻食，多种搭配"},
+                    {name: "汉堡", desc: "美式经典，多层口感"},
+                    {name: "烤鸡", desc: "外皮酥脆，肉质鲜嫩"},
+                    {name: "披萨", desc: "意式风味，多种配料"},
+                    {name: "海鲜烩饭", desc: "西班牙风味，鲜美浓郁"},
+                    {name: "法式蜗牛", desc: "法式经典，蒜香浓郁"},
+                    {name: "惠灵顿牛排", desc: "高级西餐，酥皮包裹"},
+                    {name: "千层面", desc: "意式经典，芝士浓郁"},
+                    {name: "烤羊排", desc: "肉质鲜嫩，香料入味"},
+                    {name: "西班牙海鲜饭", desc: "藏红花调味，海鲜丰富"},
+                    {name: "德式香肠", desc: "多种口味，配酸菜啤酒"},
+                    {name: "法式鹅肝", desc: "高级料理，入口即化"}
+                ]
+            },
+            { 
+                category: "东南亚菜", 
+                foods: [
+                    {name: "冬阴功汤", desc: "泰式酸辣，香茅风味"},
+                    {name: "咖喱蟹", desc: "泰式经典，咖喱浓郁"},
+                    {name: "菠萝炒饭", desc: "泰式风味，酸甜可口"},
+                    {name: "越南河粉", desc: "清淡鲜美，香料独特"},
+                    {name: "芒果糯米饭", desc: "泰式甜点，香甜软糯"},
+                    {name: "沙爹烤肉", desc: "印尼风味，花生酱香"},
+                    {name: "海南鸡饭", desc: "新加坡名菜，鸡肉嫩滑"},
+                    {name: "泰式炒河粉", desc: "酸甜微辣，锅气十足"},
+                    {name: "印尼炒饭", desc: "香料丰富，风味独特"},
+                    {name: "青木瓜沙拉", desc: "泰式开胃菜，酸辣爽口"},
+                    {name: "椰浆饭", desc: "马来西亚国菜，椰香浓郁"},
+                    {name: "肉骨茶", desc: "新加坡特色，药材香浓"},
+                    {name: "越南春卷", desc: "清爽可口，蘸鱼露食用"},
+                    {name: "泰式绿咖喱", desc: "椰奶香浓，微辣适口"},
+                    {name: "新加坡辣椒螃蟹", desc: "甜辣酱汁，蟹肉鲜美"}
+                ]
+            },
+            { 
+                category: "地方特色", 
+                foods: [
+                    {name: "云南过桥米线", desc: "汤鲜料足，云南特色"},
+                    {name: "桂林米粉", desc: "卤水香浓，广西风味"},
+                    {name: "西安羊肉泡馍", desc: "陕西名吃，汤浓馍香"},
+                    {name: "长沙臭豆腐", desc: "闻着臭吃着香，外酥里嫩"},
+                    {name: "广东肠粉", desc: "滑嫩爽口，早餐首选"},
+                    {name: "上海生煎包", desc: "底部酥脆，汤汁丰富"},
+                    {name: "南京盐水鸭", desc: "鸭肉鲜嫩，咸香适口"},
+                    {name: "杭州东坡肉", desc: "肥而不腻，入口即化"},
+                    {name: "成都夫妻肺片", desc: "麻辣鲜香，川味凉菜"},
+                    {name: "新疆大盘鸡", desc: "鸡肉鲜嫩，土豆软糯"},
+                    {name: "山西刀削面", desc: "面条筋道，卤汁香浓"},
+                    {name: "武汉三鲜豆皮", desc: "糯米馅料，外皮酥脆"},
+                    {name: "天津狗不理包子", desc: "皮薄馅大，汁多味美"},
+                    {name: "福建沙县小吃", desc: "拌面扁肉，经济实惠"},
+                    {name: "东北锅包肉", desc: "酸甜酥脆，外焦里嫩"}
+                ]
+            },
+            { 
+                category: "健康轻食", 
+                foods: [
+                    {name: "鸡胸肉沙拉", desc: "高蛋白低脂，健身首选"},
+                    {name: "藜麦碗", desc: "超级食物，营养丰富"},
+                    {name: "牛油果沙拉", desc: "健康脂肪，清新口感"},
+                    {name: "三明治", desc: "轻食经典，多种搭配"},
+                    {name: "蔬菜卷", desc: "低卡路里，清爽可口"},
+                    {name: "希腊酸奶碗", desc: "高蛋白，搭配水果坚果"},
+                    {name: "糙米便当", desc: "粗粮主食，健康搭配"},
+                    {name: "烤蔬菜拼盘", desc: "多种蔬菜，原汁原味"},
+                    {name: "水煮鸡胸", desc: "简单烹饪，高蛋白低脂"},
+                    {name: "水果沙拉", desc: "多种水果，维生素丰富"},
+                    {name: "羽衣甘蓝沙拉", desc: "超级蔬菜，营养丰富"},
+                    {name: "鹰嘴豆泥", desc: "中东风味，高蛋白低脂"},
+                    {name: "烤三文鱼", desc: "Omega-3丰富，健康脂肪"},
+                    {name: "藜麦沙拉", desc: "全蛋白谷物，营养均衡"},
+                    {name: "蔬菜汤", desc: "低卡路里，温暖舒适"}
+                ]
+            },
+            { 
+                category: "甜品饮品", 
+                foods: [
+                    {name: "提拉米苏", desc: "意式经典，咖啡酒香"},
+                    {name: "芝士蛋糕", desc: "浓郁芝士，口感绵密"},
+                    {name: "芒果西米露", desc: "港式甜品，香甜爽口"},
+                    {name: "珍珠奶茶", desc: "经典饮品，Q弹珍珠"},
+                    {name: "冰淇淋", desc: "多种口味，夏日必备"},
+                    {name: "双皮奶", desc: "广式甜品，奶香浓郁"},
+                    {name: "杨枝甘露", desc: "港式经典，芒果柚子"},
+                    {name: "抹茶拿铁", desc: "日式风味，茶香浓郁"},
+                    {name: "红豆汤", desc: "中式甜品，温暖甜蜜"},
+                    {name: "水果茶", desc: "清新果香，健康饮品"},
+                    {name: "巧克力熔岩蛋糕", desc: "流心巧克力，温暖甜蜜"},
+                    {name: "焦糖布丁", desc: "滑嫩香甜，焦糖脆皮"},
+                    {name: "芋圆甜品", desc: "台湾特色，Q弹有嚼劲"},
+                    {name: "奶盖茶", desc: "咸甜奶盖，茶香浓郁"},
+                    {name: "冰粉", desc: "四川甜品，清凉解暑"}
+                ]
+            },
+            { 
+                category: "早餐选择", 
+                foods: [
+                    {name: "豆浆油条", desc: "经典中式早餐组合"},
+                    {name: "小笼包", desc: "皮薄馅大，汤汁丰富"},
+                    {name: "肠粉", desc: "广式早茶，滑嫩爽口"},
+                    {name: "煎饼果子", desc: "天津特色，薄脆香酥"},
+                    {name: "粥类", desc: "白粥/皮蛋瘦肉粥/海鲜粥"},
+                    {name: "烧麦", desc: "广式早茶，糯米馅料"},
+                    {name: "糯米鸡", desc: "荷叶包裹，糯米香浓"},
+                    {name: "粢饭团", desc: "上海特色，糯米包油条"},
+                    {name: "豆腐脑", desc: "咸甜之争，南北差异"},
+                    {name: "西式早餐", desc: "煎蛋/培根/吐司/咖啡"},
+                    {name: "法式吐司", desc: "蛋奶浸泡，煎至金黄"},
+                    {name: "燕麦碗", desc: "健康早餐，搭配水果"},
+                    {name: "鸡蛋三明治", desc: "简单快捷，营养均衡"},
+                    {name: "华夫饼", desc: "格子松饼，搭配糖浆"},
+                    {name: "可颂面包", desc: "法式经典，酥脆多层"}
+                ]
+            },
+            { 
+                category: "烧烤/烤肉", 
+                foods: [
+                    {name: "羊肉串", desc: "炭火烤制，孜然飘香"},
+                    {name: "烤牛肉", desc: "肉质鲜嫩，炭火香气"},
+                    {name: "烤五花肉", desc: "肥瘦相间，焦香不腻"},
+                    {name: "烤鸡翅", desc: "外皮酥脆，肉质鲜嫩"},
+                    {name: "烤茄子", desc: "蒜蓉调味，软糯入味"},
+                    {name: "烤生蚝", desc: "蒜蓉粉丝，海鲜鲜美"},
+                    {name: "烤扇贝", desc: "肉质鲜嫩，蒜香浓郁"},
+                    {name: "烤玉米", desc: "甜玉米，炭火烤制"},
+                    {name: "烤韭菜", desc: "蔬菜烧烤，别有风味"},
+                    {name: "烤馒头片", desc: "外酥内软，撒孜然辣椒"},
+                    {name: "韩式烤肉", desc: "自己动手，配生菜蒜片"},
+                    {name: "日式烧鸟", desc: "鸡肉串烧，酱汁浓郁"},
+                    {name: "巴西烤肉", desc: "大块烤肉，原汁原味"},
+                    {name: "新疆红柳烤肉", desc: "大块羊肉，红柳串制"},
+                    {name: "烤鱼", desc: "整鱼烤制，麻辣鲜香"}
+                ]
+            },
+            { 
+                category: "海鲜料理", 
+                foods: [
+                    {name: "清蒸大闸蟹", desc: "秋季时令，蟹黄饱满"},
+                    {name: "白灼虾", desc: "原汁原味，鲜甜可口"},
+                    {name: "蒜蓉粉丝蒸扇贝", desc: "蒜香浓郁，粉丝入味"},
+                    {name: "红烧带鱼", desc: "鱼肉鲜嫩，酱香浓郁"},
+                    {name: "椒盐皮皮虾", desc: "外壳酥脆，肉质鲜甜"},
+                    {name: "葱油蛏子", desc: "葱香浓郁，蛏子肥美"},
+                    {name: "避风塘炒蟹", desc: "港式风味，蒜香酥脆"},
+                    {name: "清蒸多宝鱼", desc: "鱼肉细嫩，原汁原味"},
+                    {name: "香辣蟹", desc: "麻辣鲜香，蟹肉入味"},
+                    {name: "三文鱼刺身", desc: "新鲜肥美，蘸芥末酱油"},
+                    {name: "泰式柠檬虾", desc: "酸辣开胃，虾肉Q弹"},
+                    {name: "海鲜大咖", desc: "多种海鲜，一锅满足"},
+                    {name: "干锅鱿鱼", desc: "麻辣鲜香，鱿鱼脆嫩"},
+                    {name: "芝士焗龙虾", desc: "高级料理，芝士浓郁"},
+                    {name: "蛤蜊蒸蛋", desc: "滑嫩鲜美，营养丰富"}
+                ]
+            },
+            { 
+                category: "家常小炒", 
+                foods: [
+                    {name: "番茄炒蛋", desc: "家常经典，酸甜适口"},
+                    {name: "青椒肉丝", desc: "简单下饭，家常味道"},
+                    {name: "酸辣土豆丝", desc: "酸辣爽口，家常小菜"},
+                    {name: "地三鲜", desc: "东北特色，土豆茄子青椒"},
+                    {name: "干煸四季豆", desc: "川味小炒，干香麻辣"},
+                    {name: "红烧茄子", desc: "酱香浓郁，茄子软糯"},
+                    {name: "蒜蓉空心菜", desc: "清炒时蔬，蒜香浓郁"},
+                    {name: "蚂蚁上树", desc: "粉丝炒肉末，形象生动"},
+                    {name: "宫保鸡丁", desc: "川味经典，花生脆香"},
+                    {name: "木须肉", desc: "鸡蛋木耳肉片，营养均衡"},
+                    {name: "鱼香茄子", desc: "鱼香口味，茄子软糯"},
+                    {name: "回锅肉", desc: "川菜经典，肥而不腻"},
+                    {name: "麻婆豆腐", desc: "麻辣鲜香，豆腐嫩滑"},
+                    {name: "醋溜白菜", desc: "酸香爽口，家常素菜"},
+                    {name: "京酱肉丝", desc: "甜面酱调味，配葱丝卷饼"}
+                ]
+            },
+            { 
+                category: "异国料理", 
+                foods: [
+                    {name: "墨西哥卷饼", desc: "玉米饼包裹，多种馅料"},
+                    {name: "印度咖喱", desc: "香料丰富，配馕或米饭"},
+                    {name: "土耳其烤肉", desc: "旋转烤制，肉质鲜嫩"},
+                    {name: "越南河粉", desc: "汤头清澈，香料独特"},
+                    {name: "泰国冬阴功", desc: "酸辣开胃，香茅风味"},
+                    {name: "意大利千层面", desc: "芝士浓郁，层次丰富"},
+                    {name: "德国猪肘", desc: "外皮酥脆，肉质软嫩"},
+                    {name: "希腊沙拉", desc: "橄榄油调味，清新爽口"},
+                    {name: "法式焗蜗牛", desc: "蒜香黄油，法式经典"},
+                    {name: "西班牙海鲜饭", desc: "藏红花调味，海鲜丰富"},
+                    {name: "摩洛哥塔吉锅", desc: "香料炖煮，风味独特"},
+                    {name: "巴西烤肉", desc: "大块烤肉，原汁原味"},
+                    {name: "瑞典肉丸", desc: "配越橘酱和土豆泥"},
+                    {name: "比利时华夫饼", desc: "外脆内软，搭配水果"},
+                    {name: "奥地利炸猪排", desc: "酥脆金黄，配柠檬片"}
+                ]
+            }
+        ];
+
+        const categoryElement = document.getElementById('category');
+        const foodElement = document.getElementById('food');
+        const descriptionElement = document.getElementById('description');
+        const generateBtn = document.getElementById('generateBtn');
+        const foodsGrid = document.getElementById('foodsGrid');
+        const filterButtons = document.getElementById('filterButtons');
+        
+        let isFlashing = false;
+        let randomizeInterval;
+        let currentFilter = 'all';
+
+        // 初始化显示所有美食
+        function displayAllFoods(filter = 'all') {
+            foodsGrid.innerHTML = '';
+            
+            foodData.forEach(category => {
+                if (filter === 'all' || filter === category.category) {
+                    const foodItem = document.createElement('div');
+                    foodItem.className = 'food-item';
+                    
+                    const foodCategory = document.createElement('div');
+                    foodCategory.className = 'food-category';
+                    foodCategory.textContent = category.category;
+                    
+                    const foodList = document.createElement('div');
+                    foodList.className = 'food-list';
+                    
+                    category.foods.forEach(food => {
+                        const foodDiv = document.createElement('div');
+                        foodDiv.textContent = `${food.name} - ${food.desc}`;
+                        foodList.appendChild(foodDiv);
+                    });
+                    
+                    foodItem.appendChild(foodCategory);
+                    foodItem.appendChild(foodList);
+                    foodsGrid.appendChild(foodItem);
+                }
+            });
+        }
+
+        // 创建筛选按钮
+        function createFilterButtons() {
+            // 添加"全部"按钮
+            const allButton = document.createElement('button');
+            allButton.className = 'filter-btn active';
+            allButton.textContent = '全部';
+            allButton.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                allButton.classList.add('active');
+                currentFilter = 'all';
+                displayAllFoods('all');
+            });
+            filterButtons.appendChild(allButton);
+            
+            // 为每个分类创建按钮
+            foodData.forEach(category => {
+                const button = document.createElement('button');
+                button.className = 'filter-btn';
+                button.textContent = category.category;
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentFilter = category.category;
+                    displayAllFoods(category.category);
+                });
+                filterButtons.appendChild(button);
+            });
+        }
+
+        // 开始闪动效果
+        function startFlashing() {
+            isFlashing = true;
+            categoryElement.classList.add('flashing');
+            foodElement.classList.add('flashing');
+            descriptionElement.classList.add('flashing');
+            
+            // 快速切换显示不同的美食
+            randomizeInterval = setInterval(() => {
+                let filteredData = foodData;
+                if (currentFilter !== 'all') {
+                    filteredData = foodData.filter(cat => cat.category === currentFilter);
+                }
+                
+                if (filteredData.length > 0) {
+                    const randomCatIndex = Math.floor(Math.random() * filteredData.length);
+                    const randomCategory = filteredData[randomCatIndex];
+                    const randomFoodIndex = Math.floor(Math.random() * randomCategory.foods.length);
+                    const randomFood = randomCategory.foods[randomFoodIndex];
+                    
+                    categoryElement.textContent = randomCategory.category;
+                    foodElement.textContent = randomFood.name;
+                    descriptionElement.textContent = randomFood.desc;
+                }
+            }, 100);
+        }
+
+        // 停止闪动效果
+        function stopFlashing() {
+            isFlashing = false;
+            clearInterval(randomizeInterval);
+            categoryElement.classList.remove('flashing');
+            foodElement.classList.remove('flashing');
+            descriptionElement.classList.remove('flashing');
+            
+            // 最终确定一个随机结果
+            generateRecommendation();
+        }
+
+        // 随机生成推荐
+        function generateRecommendation() {
+            let filteredData = foodData;
+            if (currentFilter !== 'all') {
+                filteredData = foodData.filter(cat => cat.category === currentFilter);
+            }
+            
+            if (filteredData.length > 0) {
+                // 随机选择一个分类
+                const randomCatIndex = Math.floor(Math.random() * filteredData.length);
+                const selectedCategory = filteredData[randomCatIndex];
+                
+                // 随机选择该分类的一个美食
+                const randomFoodIndex = Math.floor(Math.random() * selectedCategory.foods.length);
+                const selectedFood = selectedCategory.foods[randomFoodIndex];
+                
+                // 更新DOM
+                categoryElement.textContent = selectedCategory.category;
+                foodElement.textContent = selectedFood.name;
+                descriptionElement.textContent = selectedFood.desc;
+                
+                // 添加动画效果
+                categoryElement.style.animation = 'none';
+                foodElement.style.animation = 'none';
+                descriptionElement.style.animation = 'none';
+                void categoryElement.offsetWidth;
+                void foodElement.offsetWidth;
+                void descriptionElement.offsetWidth;
+                categoryElement.style.animation = 'fadeIn 0.5s ease';
+                foodElement.style.animation = 'fadeIn 0.7s ease';
+                descriptionElement.style.animation = 'fadeIn 0.9s ease';
+            }
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 初始加载时显示所有美食和筛选按钮
+        displayAllFoods();
+        createFilterButtons();
+        
+        // 点击按钮时开始或停止随机
+        generateBtn.addEventListener('click', function() {
+            if (isFlashing) {
+                stopFlashing();
+                this.textContent = '随机推荐';
+            } else {
+                startFlashing();
+                this.textContent = '停止随机';
+            }
+        });
+    </script>
+</body>
+</html>
